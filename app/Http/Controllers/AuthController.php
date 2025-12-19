@@ -40,30 +40,29 @@ class AuthController extends Controller
     // LOGIN
     // ==========================
     public function login(Request $request)
-    {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => 'Email atau password salah',
-            ]);
-        }
+    $user = \App\Models\User::where('email', $request->email)->first();
 
-        $user = Auth::user();
-
-        // Generate Sanctum Token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+    if (!$user || !\Hash::check($request->password, $user->password)) {
         return response()->json([
-            'message' => 'Login berhasil',
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
-        ]);
+            'message' => 'Email atau password salah'
+        ], 401);
     }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login berhasil',
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'user' => $user
+    ]);
+}
 
 
     // ==========================
