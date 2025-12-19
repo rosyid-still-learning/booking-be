@@ -13,15 +13,23 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-    $middleware->alias([
-        'is_admin' => \App\Http\Middleware\IsAdmin::class,
-    ]);
+        /**
+         * =====================================================
+         * ✅ WAJIB: AKTIFKAN CORS (UNTUK FRONTEND → RAILWAY)
+         * =====================================================
+         */
+        $middleware->append(
+            \Illuminate\Http\Middleware\HandleCors::class
+        );
 
-
-
-        // kalau suatu saat kamu punya middleware lain, tambahkan di sini:
-        // 'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-        // 'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        /**
+         * =====================================================
+         * ✅ ALIAS MIDDLEWARE CUSTOM
+         * =====================================================
+         */
+        $middleware->alias([
+            'is_admin' => \App\Http\Middleware\IsAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
