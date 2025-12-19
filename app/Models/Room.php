@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Room extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+    'name',
+    'location',
+    'capacity',
+    'facilities',
+    'description',
+    'is_active',
+    'category',
+    'image',
+];
+
+protected $casts = [
+    'facilities' => 'array',
+    'is_active' => 'boolean',
+];
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image
+            ? asset('storage/' . $this->image)
+            : null;
+    }
+}
