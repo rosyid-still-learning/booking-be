@@ -2,18 +2,22 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\BookingController;
-use Illuminate\Support\Facades\Schema;
 
+/*
+|--------------------------------------------------------------------------
+| CHECK DB (DEBUG)
+|--------------------------------------------------------------------------
+*/
 Route::get('/check-db', function () {
     return [
         'users_table' => Schema::hasTable('users'),
         'migrations_table' => Schema::hasTable('migrations'),
     ];
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +38,19 @@ Route::post('/login', [AuthController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
+| PUBLIC ROOMS (⚠️ INI YANG DIPINDAHKAN, BUKAN DIHAPUS)
+|--------------------------------------------------------------------------
+| Dipakai oleh:
+| - user/rooms
+| - room detail
+| - calendar booking
+*/
+Route::get('/rooms', [RoomController::class, 'index']);
+Route::get('/rooms/{room}', [RoomController::class, 'show']);
+Route::get('/rooms/{id}/bookings', [BookingController::class, 'bookingsByRoomPublic']);
+
+/*
+|--------------------------------------------------------------------------
 | AUTHENTICATED USER ROUTES
 |--------------------------------------------------------------------------
 */
@@ -42,10 +59,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // AUTH
     Route::get('/me', fn (Request $req) => $req->user());
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // ROOMS (USER)
-    Route::get('/rooms', [RoomController::class, 'index']);
-    Route::get('/rooms/{room}', [RoomController::class, 'show']);
 
     // BOOKINGS (USER)
     Route::get('/bookings', [BookingController::class, 'index']);
@@ -57,13 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // CANCEL BOOKING
     Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
 });
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC BOOKINGS (UNTUK CALENDAR / VIEW)
-|--------------------------------------------------------------------------
-*/
-Route::get('/rooms/{id}/bookings', [BookingController::class, 'bookingsByRoomPublic']);
 
 /*
 |--------------------------------------------------------------------------
@@ -84,14 +90,13 @@ Route::middleware(['auth:sanctum', 'is_admin'])
         // BOOKINGS (ADMIN)
         Route::get('/bookings', [BookingController::class, 'adminIndex']);
         Route::delete('/bookings/{id}', [BookingController::class, 'adminDelete']);
-
         Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
         Route::post('/bookings/{id}/reject', [BookingController::class, 'rejectBooking']);
 
         // BOOKING HISTORY
         Route::get('/booking-history', [BookingController::class, 'history']);
 
-        // BOOKINGS BY ROOM
+        // BOOKINGS BY ROOM (ADMIN)
         Route::get('/rooms/{room_id}/bookings', [BookingController::class, 'bookingsByRoom']);
 
         // PENDING COUNT
@@ -101,7 +106,7 @@ Route::middleware(['auth:sanctum', 'is_admin'])
         Route::get('/notifications', [BookingController::class, 'adminNotifications']);
         Route::post('/notifications/clear', [BookingController::class, 'clearNotifications']);
 
-        // ACTIVE BOOKINGS (OPTIONAL / LEGACY)
+        // ACTIVE BOOKINGS (LEGACY)
         Route::get('/bookings/active', function () {
             return \App\Models\Booking::with('room')
                 ->where('status', 'approved')
