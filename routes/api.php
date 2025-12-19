@@ -5,6 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\BookingController;
+use Illuminate\Support\Facades\Schema;
+
+Route::get('/check-db', function () {
+    return [
+        'users_table' => Schema::hasTable('users'),
+        'migrations_table' => Schema::hasTable('migrations'),
+    ];
+});
+
 
 /*
 |--------------------------------------------------------------------------
