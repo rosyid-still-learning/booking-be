@@ -2,6 +2,11 @@
 
 return [
 
+    
+    'providers' => [
+    CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+],
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
