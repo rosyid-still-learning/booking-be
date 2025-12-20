@@ -19,16 +19,10 @@ class Booking extends Model
 
     protected $appends = ['attachment_url'];
 
-    /**
-     * FIX UTAMA:
-     * - Kalau attachment sudah URL cloudinary → pakai langsung
-     * - Kalau masih path lama → PERBAIKI otomatis
-     */
     public function getAttachmentUrlAttribute()
     {
-        if (!$this->attachment) {
-            return null;
-        }
+        return $this->attachment;
+    
 
         // ✅ Jika sudah URL cloudinary
         if (str_starts_with($this->attachment, 'http')) {

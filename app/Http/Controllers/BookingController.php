@@ -6,7 +6,8 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary;
+
 
 
 class BookingController extends Controller
@@ -73,33 +74,40 @@ class BookingController extends Controller
         ], 409);
     }
 
- // 🟢 Upload file (FIX FINAL BENAR)
-// 🟢 Upload file pendukung (IMAGE / PDF)
-// 🟢 Upload file pendukung (IMAGE / PDF)
+ // ================= UPLOAD FILE (FINAL – STABIL) =================
 $fileUrl = null;
 
 if ($request->hasFile('attachment')) {
     try {
-        $file = $request->file('attachment');
+        $cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+        ]);
 
-        $upload = Cloudinary::upload(
-            $file->getRealPath(),
+        $upload = $cloudinary->uploadApi()->upload(
+            $request->file('attachment')->getRealPath(),
             [
                 'folder' => 'attachments',
-                'resource_type' => 'auto'
+                'resource_type' => 'auto',
             ]
         );
 
-        // ✅ URL VALID CLOUDINARY
-        $fileUrl = $upload->getSecurePath();
+        $fileUrl = $upload['secure_url'];
 
     } catch (\Throwable $e) {
+        \Log::error('Cloudinary upload error', [
+            'error' => $e->getMessage()
+        ]);
+
         return response()->json([
-            'message' => 'Upload file gagal',
-            'error' => $e->getMessage(),
+            'message' => 'Upload file gagal'
         ], 500);
     }
 }
+
 
 
 
