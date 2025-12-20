@@ -74,19 +74,23 @@ class BookingController extends Controller
     }
 
  // 🟢 Upload file (FIX FINAL BENAR)
+// 🟢 Upload file pendukung (IMAGE / PDF)
 $fileUrl = null;
 
 if ($request->hasFile('attachment')) {
     try {
-        $upload = Cloudinary::upload(
-            $request->file('attachment')->getRealPath(),
+        $file = $request->file('attachment');
+
+        // 🔥 PAKAI uploadFile AGAR PDF AMAN
+        $upload = Cloudinary::uploadFile(
+            $file->getRealPath(),
             [
                 'folder' => 'attachments',
                 'resource_type' => 'auto'
             ]
         );
 
-        // ✅ FULL URL + VERSION
+        // ✅ FULL URL + vXXXXXXXX
         $fileUrl = $upload->getSecurePath();
 
     } catch (\Exception $e) {
@@ -96,6 +100,7 @@ if ($request->hasFile('attachment')) {
         ], 500);
     }
 }
+
 
 
 
