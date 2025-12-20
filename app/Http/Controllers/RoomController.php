@@ -17,6 +17,15 @@ class RoomController extends Controller
     ]);
 }
 
+public function testCloudinary()
+{
+    return response()->json([
+        'cloud' => config('cloudinary.cloud_name'),
+        'key' => config('cloudinary.api_key'),
+        'secret' => config('cloudinary.api_secret') ? 'ADA' : 'KOSONG',
+    ]);
+}
+
 
     /**
      * Simpan ruangan baru.

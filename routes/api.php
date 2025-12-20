@@ -12,6 +12,9 @@ use App\Http\Controllers\BookingController;
 | CHECK DB (DEBUG)
 |--------------------------------------------------------------------------
 */
+
+Route::get('/test-cloudinary', [RoomController::class, 'testCloudinary']);
+
 Route::get('/check-db', function () {
     return [
         'users_table' => Schema::hasTable('users'),
