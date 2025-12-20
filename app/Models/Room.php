@@ -15,13 +15,19 @@ class Room extends Model
         'capacity',
         'facilities',
         'description',
-        'is_active',
         'category',
         'image',
     ];
 
     protected $casts = [
         'facilities' => 'array',
-        'is_active' => 'boolean',
     ];
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        // image SUDAH URL CLOUDINARY
+        return $this->image;
+    }
 }
