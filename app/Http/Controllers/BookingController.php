@@ -72,14 +72,30 @@ class BookingController extends Controller
         ], 409);
     }
 
-    // 🟢 Upload file (LOCAL STORAGE, AMAN)
-$filePath = null;
+  // 🟢 Upload file (FIX FINAL)
+$fileUrl = null;
 
 if ($request->hasFile('attachment')) {
-    $filePath = $request
-        ->file('attachment')
-        ->store('attachments', 'public');
+    try {
+        $upload = Cloudinary::upload(
+            $request->file('attachment')->getRealPath(),
+            [
+                'folder' => 'attachments',
+                'resource_type' => 'auto'
+            ]
+        );
+
+        // ✅ SIMPAN FULL URL CLOUDINARY
+        $fileUrl = $upload->getSecurePath();
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Upload file gagal',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
+
 
 
     // 🟢 Simpan booking
@@ -90,7 +106,7 @@ if ($request->hasFile('attachment')) {
         'purpose' => $validated['purpose'] ?? null,
         'start_time' => $validated['start_time'],
         'end_time' => $validated['end_time'],
-        'attachment' => $filePath,
+        'attachment' => $fileUrl,
         'status' => 'pending'
     ]);
 
