@@ -8,9 +8,6 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
-    /**
-     * GET /rooms
-     */
     public function index()
     {
         return response()->json([
@@ -18,9 +15,6 @@ class RoomController extends Controller
         ]);
     }
 
-    /**
-     * POST /admin/rooms
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -30,10 +24,9 @@ class RoomController extends Controller
             'facilities' => 'required',
             'description' => 'nullable|string',
             'category' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
-        // facilities → array
         if (is_string($request->facilities)) {
             $validated['facilities'] = array_map(
                 'trim',
@@ -41,23 +34,19 @@ class RoomController extends Controller
             );
         }
 
-        // ===== CLOUDINARY UPLOAD (FINAL & AMAN) =====
+        // ✅ SIGNED UPLOAD (FINAL)
         if ($request->hasFile('image')) {
             try {
-                $upload = Cloudinary::uploadApi()->upload(
+                $result = Cloudinary::uploadFile(
                     $request->file('image')->getRealPath(),
-                    [
-                        'folder' => 'rooms',
-                        'upload_preset' => 'rooms_unsigned',
-                    ]
+                    ['folder' => 'rooms']
                 );
 
-                // SIMPAN URL CLOUDINARY
-                $validated['image'] = $upload['secure_url'];
+                $validated['image'] = $result->getSecurePath();
             } catch (\Exception $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ], 500);
             }
         }
@@ -66,21 +55,10 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Ruangan berhasil ditambahkan',
-            'data' => $room,
+            'data' => $room
         ], 201);
     }
 
-    /**
-     * GET /admin/rooms/{room}
-     */
-    public function show(Room $room)
-    {
-        return response()->json($room);
-    }
-
-    /**
-     * PUT /admin/rooms/{room}
-     */
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
@@ -90,7 +68,7 @@ class RoomController extends Controller
             'facilities' => 'required',
             'category' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         if (is_string($request->facilities)) {
@@ -100,22 +78,18 @@ class RoomController extends Controller
             );
         }
 
-        // ===== CLOUDINARY UPDATE IMAGE =====
         if ($request->hasFile('image')) {
             try {
-                $upload = Cloudinary::uploadApi()->upload(
+                $result = Cloudinary::uploadFile(
                     $request->file('image')->getRealPath(),
-                    [
-                        'folder' => 'rooms',
-                        'upload_preset' => 'rooms_unsigned',
-                    ]
+                    ['folder' => 'rooms']
                 );
 
-                $validated['image'] = $upload['secure_url'];
+                $validated['image'] = $result->getSecurePath();
             } catch (\Exception $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ], 500);
             }
         }
@@ -124,13 +98,10 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Ruangan berhasil diperbarui',
-            'data' => $room,
+            'data' => $room
         ]);
     }
 
-    /**
-     * DELETE /admin/rooms/{room}
-     */
     public function destroy(Request $request, Room $room)
     {
         if ($request->user()->role !== 'admin') {
