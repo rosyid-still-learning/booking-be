@@ -55,21 +55,26 @@ class RoomController extends Controller
         }
 
         // 🔥 UPLOAD IMAGE KE CLOUDINARY
-        if ($request->hasFile('image')) {
+       // 🔥 UPLOAD IMAGE KE CLOUDINARY (VERSI STABIL)
+if ($request->hasFile('image')) {
     try {
-        $upload = Cloudinary::upload(
+        $uploaded = Cloudinary::upload(
             $request->file('image')->getRealPath(),
-            ['folder' => 'rooms']
+            [
+                'folder' => 'rooms',
+            ]
         );
 
-        $validated['image'] = $upload->getSecurePath();
-    } catch (\Exception $e) {
+        // PASTIKAN AMBIL SECURE URL
+        $validated['image'] = $uploaded->getSecurePath();
+    } catch (\Throwable $e) {
         return response()->json([
             'error' => 'Cloudinary upload failed',
             'message' => $e->getMessage(),
         ], 500);
     }
 }
+
 
     }
 
@@ -105,21 +110,24 @@ class RoomController extends Controller
         }
 
         // 🔥 UPLOAD IMAGE BARU KE CLOUDINARY
-        if ($request->hasFile('image')) {
-            $upload = Cloudinary::upload(
-                $request->file('image')->getRealPath(),
-                ['folder' => 'rooms']
-            );
+       if ($request->hasFile('image')) {
+    try {
+        $uploaded = Cloudinary::upload(
+            $request->file('image')->getRealPath(),
+            [
+                'folder' => 'rooms',
+            ]
+        );
 
-            $validated['image'] = $upload->getSecurePath();
-        }
-
-        $room->update($validated);
-
+        $validated['image'] = $uploaded->getSecurePath();
+    } catch (\Throwable $e) {
         return response()->json([
-            'message' => 'Ruangan berhasil diperbarui',
-            'data' => $room
-        ]);
+            'error' => 'Cloudinary upload failed',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+}
+
     }
 
     /**
