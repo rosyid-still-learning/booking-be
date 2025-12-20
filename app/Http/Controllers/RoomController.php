@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller
 {
     /**
-     * ===============================
-     * LIST RUANGAN (PUBLIC & ADMIN)
-     * ===============================
+     * Tampilkan daftar semua ruangan.
      */
     public function index()
     {
@@ -21,38 +19,34 @@ class RoomController extends Controller
     }
 
     /**
-     * ===============================
-     * TEST CLOUDINARY (DEBUG)
-     * ===============================
+     * Test Cloudinary config
      */
     public function testCloudinary()
     {
         return response()->json([
-            'cloud'  => config('cloudinary.cloud_name'),
-            'key'    => config('cloudinary.api_key'),
+            'cloud' => config('cloudinary.cloud_name'),
+            'key' => config('cloudinary.api_key'),
             'secret' => config('cloudinary.api_secret') ? 'ADA' : 'KOSONG',
         ]);
     }
 
     /**
-     * ===============================
-     * CREATE ROOM (ADMIN)
-     * ===============================
+     * Simpan ruangan baru.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string',
-            'location'    => 'required|string',
-            'capacity'    => 'required|integer',
-            'facilities'  => 'required',
+            'name' => 'required|string',
+            'location' => 'required|string',
+            'capacity' => 'required|integer',
+            'facilities' => 'required',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
-            'category'    => 'nullable|string',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'is_active' => 'boolean',
+            'category' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
-        // 🔧 facilities: string → array
+        // facilities → array
         if (is_string($request->facilities)) {
             $validated['facilities'] = array_map(
                 'trim',
@@ -60,29 +54,21 @@ class RoomController extends Controller
             );
         }
 
-        // ☁️ UPLOAD KE CLOUDINARY
+        // upload image
         if ($request->hasFile('image')) {
-            $upload = Cloudinary::upload(
-                $request->file('image')->getRealPath(),
-                ['folder' => 'rooms']
-            );
-
-            // SIMPAN URL LANGSUNG
-            $validated['image'] = $upload->getSecurePath();
+            $validated['image'] = $request->file('image')->store('rooms', 'public');
         }
 
         $room = Room::create($validated);
 
         return response()->json([
             'message' => 'Ruangan berhasil ditambahkan',
-            'data'    => $room
+            'data' => $room
         ], 201);
     }
 
     /**
-     * ===============================
-     * DETAIL ROOM
-     * ===============================
+     * Detail ruangan
      */
     public function show(Room $room)
     {
@@ -90,55 +76,57 @@ class RoomController extends Controller
     }
 
     /**
-     * ===============================
-     * UPDATE ROOM (ADMIN)
-     * ===============================
+     * Update ruangan
      */
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'name'        => 'required|string',
-            'location'    => 'required|string',
-            'capacity'    => 'required|integer',
-            'facilities'  => 'required|string',
-            'category'    => 'required|string',
+            'name' => 'required|string',
+            'location' => 'required|string',
+            'capacity' => 'required|integer',
+            'facilities' => 'required',
+            'category' => 'required|string',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
-        $validated['facilities'] = array_map(
-            'trim',
-            explode(',', $request->facilities)
-        );
-
-        // ☁️ UPDATE IMAGE KE CLOUDINARY
-        if ($request->hasFile('image')) {
-            $upload = Cloudinary::upload(
-                $request->file('image')->getRealPath(),
-                ['folder' => 'rooms']
+        // facilities → array
+        if (is_string($request->facilities)) {
+            $validated['facilities'] = array_map(
+                'trim',
+                explode(',', $request->facilities)
             );
+        }
 
-            $validated['image'] = $upload->getSecurePath();
+        // jika upload image baru
+        if ($request->hasFile('image')) {
+            if ($room->image && Storage::disk('public')->exists($room->image)) {
+                Storage::disk('public')->delete($room->image);
+            }
+
+            $validated['image'] = $request->file('image')->store('rooms', 'public');
         }
 
         $room->update($validated);
 
         return response()->json([
             'message' => 'Ruangan berhasil diperbarui',
-            'data'    => $room
+            'data' => $room
         ]);
     }
 
     /**
-     * ===============================
-     * DELETE ROOM (ADMIN)
-     * ===============================
+     * Hapus ruangan
      */
     public function destroy(Request $request, Room $room)
     {
         if ($request->user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($room->image && Storage::disk('public')->exists($room->image)) {
+            Storage::disk('public')->delete($room->image);
         }
 
         $room->delete();
