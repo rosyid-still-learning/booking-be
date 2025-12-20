@@ -6,7 +6,6 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class BookingController extends Controller
@@ -73,16 +72,13 @@ class BookingController extends Controller
         ], 409);
     }
 
-    // 🟢 Upload file
-    $filePath = null;
+    // 🟢 Upload file (LOCAL STORAGE, AMAN)
+$filePath = null;
 
 if ($request->hasFile('attachment')) {
-    $upload = Cloudinary::upload(
-        $request->file('attachment')->getRealPath(),
-        ['folder' => 'attachments']
-    );
-
-    $filePath = $upload->getSecurePath(); // URL
+    $filePath = $request
+        ->file('attachment')
+        ->store('attachments', 'public');
 }
 
 

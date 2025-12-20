@@ -17,6 +17,16 @@ class Booking extends Model
         'status',
     ];
 
+    protected $appends = ['attachment_url'];
+
+public function getAttachmentUrlAttribute()
+{
+    return $this->attachment
+        ? asset('storage/' . $this->attachment)
+        : null;
+}
+
+
     public function room()
     {
         return $this->belongsTo(Room::class);
