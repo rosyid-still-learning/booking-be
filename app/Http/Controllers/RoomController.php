@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Http;
 
 class RoomController extends Controller
 {
@@ -15,26 +15,22 @@ class RoomController extends Controller
         ]);
     }
 
-    public function testCloudinary()
+    public function show(Room $room)
     {
-        return response()->json([
-            'cloud' => config('cloudinary.cloud_name'),
-            'key' => config('cloudinary.api_key'),
-            'secret' => config('cloudinary.api_secret') ? 'ADA' : 'KOSONG',
-        ]);
+        return response()->json($room);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string',
-            'location'    => 'required|string',
-            'capacity'    => 'required|integer',
-            'facilities'  => 'required',
+            'name' => 'required|string',
+            'location' => 'required|string',
+            'capacity' => 'required|integer',
+            'facilities' => 'required',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
-            'category'    => 'nullable|string',
-            'image'       => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'category' => 'nullable|string',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         // facilities → array
@@ -45,20 +41,38 @@ class RoomController extends Controller
             );
         }
 
-        // ✅ CLOUDINARY UPLOAD (FIXED)
+        // 🔥 UPLOAD KE CLOUDINARY (REST API)
         if ($request->hasFile('image')) {
             try {
-                $result = Cloudinary::uploadFile(
-                    $request->file('image')->getRealPath(),
-                    ['folder' => 'rooms']
+                $response = Http::asMultipart()->post(
+                    'https://api.cloudinary.com/v1_1/' .
+                        config('cloudinary.cloud_name') .
+                        '/image/upload',
+                    [
+                        [
+                            'name' => 'file',
+                            'contents' => fopen($request->file('image')->getRealPath(), 'r'),
+                        ],
+                        [
+                            'name' => 'upload_preset',
+                            'contents' => config('cloudinary.upload_preset'),
+                        ],
+                        [
+                            'name' => 'folder',
+                            'contents' => 'rooms',
+                        ],
+                    ]
                 );
 
-                // ⬅️ INI KUNCI UTAMANYA
-                $validated['image'] = $result->getSecurePath();
+                if (!$response->successful()) {
+                    throw new \Exception($response->body());
+                }
+
+                $validated['image'] = $response->json()['secure_url'];
             } catch (\Throwable $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ], 500);
             }
         }
@@ -67,26 +81,21 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Ruangan berhasil ditambahkan',
-            'data'    => $room
+            'data' => $room
         ], 201);
-    }
-
-    public function show(Room $room)
-    {
-        return response()->json($room);
     }
 
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'name'        => 'required|string',
-            'location'    => 'required|string',
-            'capacity'    => 'required|integer',
-            'facilities'  => 'required',
-            'category'    => 'required|string',
+            'name' => 'required|string',
+            'location' => 'required|string',
+            'capacity' => 'required|integer',
+            'facilities' => 'required',
             'description' => 'nullable|string',
-            'is_active'   => 'boolean',
-            'image'       => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'category' => 'required|string',
+            'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         if (is_string($request->facilities)) {
@@ -96,19 +105,37 @@ class RoomController extends Controller
             );
         }
 
-        // ✅ CLOUDINARY UPDATE (FIXED)
         if ($request->hasFile('image')) {
             try {
-                $result = Cloudinary::uploadFile(
-                    $request->file('image')->getRealPath(),
-                    ['folder' => 'rooms']
+                $response = Http::asMultipart()->post(
+                    'https://api.cloudinary.com/v1_1/' .
+                        config('cloudinary.cloud_name') .
+                        '/image/upload',
+                    [
+                        [
+                            'name' => 'file',
+                            'contents' => fopen($request->file('image')->getRealPath(), 'r'),
+                        ],
+                        [
+                            'name' => 'upload_preset',
+                            'contents' => config('cloudinary.upload_preset'),
+                        ],
+                        [
+                            'name' => 'folder',
+                            'contents' => 'rooms',
+                        ],
+                    ]
                 );
 
-                $validated['image'] = $result->getSecurePath();
+                if (!$response->successful()) {
+                    throw new \Exception($response->body());
+                }
+
+                $validated['image'] = $response->json()['secure_url'];
             } catch (\Throwable $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ], 500);
             }
         }
@@ -117,7 +144,7 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Ruangan berhasil diperbarui',
-            'data'    => $room
+            'data' => $room
         ]);
     }
 

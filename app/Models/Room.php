@@ -22,13 +22,6 @@ class Room extends Model
 
     protected $casts = [
         'facilities' => 'array',
-        'is_active'  => 'boolean',
+        'is_active' => 'boolean',
     ];
-
-    protected $appends = ['image_url'];
-
-    public function getImageUrlAttribute()
-    {
-        return $this->image; // SUDAH URL CLOUDINARY
-    }
 }
