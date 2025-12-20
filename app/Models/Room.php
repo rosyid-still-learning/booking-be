@@ -22,20 +22,14 @@ class Room extends Model
 
     protected $casts = [
         'facilities' => 'array',
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
     ];
 
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()
     {
-        if (!$this->image) return null;
-
-        // 🔥 PAKSA HTTPS
-        return str_replace(
-            'http://',
-            'https://',
-            asset('storage/' . $this->image)
-        );
+        // image SUDAH URL CLOUDINARY
+        return $this->image;
     }
 }
