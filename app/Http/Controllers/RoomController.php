@@ -8,9 +8,6 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
-    /**
-     * GET /rooms & /admin/rooms
-     */
     public function index()
     {
         return response()->json([
@@ -18,21 +15,15 @@ class RoomController extends Controller
         ]);
     }
 
-    /**
-     * TEST CLOUDINARY
-     */
     public function testCloudinary()
     {
         return response()->json([
-            'cloud'  => config('cloudinary.cloud_name'),
-            'key'    => config('cloudinary.api_key'),
+            'cloud' => config('cloudinary.cloud_name'),
+            'key' => config('cloudinary.api_key'),
             'secret' => config('cloudinary.api_secret') ? 'ADA' : 'KOSONG',
         ]);
     }
 
-    /**
-     * POST /admin/rooms
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -43,7 +34,7 @@ class RoomController extends Controller
             'description' => 'nullable|string',
             'is_active'   => 'boolean',
             'category'    => 'nullable|string',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image'       => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         // facilities → array
@@ -54,19 +45,20 @@ class RoomController extends Controller
             );
         }
 
-        // 🔥 UPLOAD IMAGE KE CLOUDINARY (AMAN)
+        // ✅ CLOUDINARY UPLOAD (FIXED)
         if ($request->hasFile('image')) {
             try {
-                $upload = Cloudinary::upload(
+                $result = Cloudinary::uploadFile(
                     $request->file('image')->getRealPath(),
                     ['folder' => 'rooms']
                 );
 
-                $validated['image'] = $upload->getSecurePath();
-            } catch (\Exception $e) {
+                // ⬅️ INI KUNCI UTAMANYA
+                $validated['image'] = $result->getSecurePath();
+            } catch (\Throwable $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error'   => $e->getMessage()
+                    'error'   => $e->getMessage(),
                 ], 500);
             }
         }
@@ -79,17 +71,11 @@ class RoomController extends Controller
         ], 201);
     }
 
-    /**
-     * GET /rooms/{room}
-     */
     public function show(Room $room)
     {
         return response()->json($room);
     }
 
-    /**
-     * PUT /admin/rooms/{room}
-     */
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
@@ -100,7 +86,7 @@ class RoomController extends Controller
             'category'    => 'required|string',
             'description' => 'nullable|string',
             'is_active'   => 'boolean',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image'       => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         if (is_string($request->facilities)) {
@@ -110,19 +96,19 @@ class RoomController extends Controller
             );
         }
 
-        // 🔥 UPLOAD IMAGE BARU (AMAN + TIDAK 500)
+        // ✅ CLOUDINARY UPDATE (FIXED)
         if ($request->hasFile('image')) {
             try {
-                $upload = Cloudinary::upload(
+                $result = Cloudinary::uploadFile(
                     $request->file('image')->getRealPath(),
                     ['folder' => 'rooms']
                 );
 
-                $validated['image'] = $upload->getSecurePath();
-            } catch (\Exception $e) {
+                $validated['image'] = $result->getSecurePath();
+            } catch (\Throwable $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error'   => $e->getMessage()
+                    'error'   => $e->getMessage(),
                 ], 500);
             }
         }
@@ -135,9 +121,6 @@ class RoomController extends Controller
         ]);
     }
 
-    /**
-     * DELETE /admin/rooms/{room}
-     */
     public function destroy(Request $request, Room $room)
     {
         if ($request->user()->role !== 'admin') {
