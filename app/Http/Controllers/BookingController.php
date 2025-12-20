@@ -6,6 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class BookingController extends Controller
@@ -72,7 +73,7 @@ class BookingController extends Controller
         ], 409);
     }
 
-  // 🟢 Upload file (FIX FINAL)
+ // 🟢 Upload file (FIX FINAL BENAR)
 $fileUrl = null;
 
 if ($request->hasFile('attachment')) {
@@ -85,7 +86,7 @@ if ($request->hasFile('attachment')) {
             ]
         );
 
-        // ✅ SIMPAN FULL URL CLOUDINARY
+        // ✅ FULL URL + VERSION
         $fileUrl = $upload->getSecurePath();
 
     } catch (\Exception $e) {
@@ -95,6 +96,7 @@ if ($request->hasFile('attachment')) {
         ], 500);
     }
 }
+
 
 
 
