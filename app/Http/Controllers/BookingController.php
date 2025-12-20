@@ -75,6 +75,7 @@ class BookingController extends Controller
     }
 
  // ================= UPLOAD FILE (FINAL – STABIL) =================
+// ================= UPLOAD FILE (FINAL STABIL) =================
 $fileUrl = null;
 
 if ($request->hasFile('attachment')) {
@@ -87,7 +88,7 @@ if ($request->hasFile('attachment')) {
             ],
         ]);
 
-        $upload = $cloudinary->uploadApi()->upload(
+        $result = $cloudinary->uploadApi()->upload(
             $request->file('attachment')->getRealPath(),
             [
                 'folder' => 'attachments',
@@ -95,11 +96,11 @@ if ($request->hasFile('attachment')) {
             ]
         );
 
-        $fileUrl = $upload['secure_url'];
+        $fileUrl = $result['secure_url'];
 
     } catch (\Throwable $e) {
         \Log::error('Cloudinary upload error', [
-            'error' => $e->getMessage()
+            'message' => $e->getMessage(),
         ]);
 
         return response()->json([
@@ -107,6 +108,7 @@ if ($request->hasFile('attachment')) {
         ], 500);
     }
 }
+
 
 
 
