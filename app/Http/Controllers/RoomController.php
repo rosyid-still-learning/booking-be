@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
@@ -13,11 +13,6 @@ class RoomController extends Controller
         return response()->json([
             'data' => Room::all()
         ]);
-    }
-
-    public function show(Room $room)
-    {
-        return response()->json($room);
     }
 
     public function store(Request $request)
@@ -29,8 +24,7 @@ class RoomController extends Controller
             'facilities' => 'required',
             'description' => 'nullable|string',
             'category' => 'nullable|string',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         // facilities → array
@@ -41,38 +35,21 @@ class RoomController extends Controller
             );
         }
 
-        // 🔥 UPLOAD KE CLOUDINARY (REST API)
+        // 🔥 CLOUDINARY UPLOAD (FINAL)
         if ($request->hasFile('image')) {
             try {
-                $response = Http::asMultipart()->post(
-                    'https://api.cloudinary.com/v1_1/' .
-                        config('cloudinary.cloud_name') .
-                        '/image/upload',
+                $upload = Cloudinary::upload(
+                    $request->file('image')->getRealPath(),
                     [
-                        [
-                            'name' => 'file',
-                            'contents' => fopen($request->file('image')->getRealPath(), 'r'),
-                        ],
-                        [
-                            'name' => 'upload_preset',
-                            'contents' => config('cloudinary.upload_preset'),
-                        ],
-                        [
-                            'name' => 'folder',
-                            'contents' => 'rooms',
-                        ],
+                        'upload_preset' => 'rooms_unsigned'
                     ]
                 );
 
-                if (!$response->successful()) {
-                    throw new \Exception($response->body());
-                }
-
-                $validated['image'] = $response->json()['secure_url'];
-            } catch (\Throwable $e) {
+                $validated['image'] = $upload->getSecurePath();
+            } catch (\Exception $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ], 500);
             }
         }
@@ -92,10 +69,9 @@ class RoomController extends Controller
             'location' => 'required|string',
             'capacity' => 'required|integer',
             'facilities' => 'required',
-            'description' => 'nullable|string',
             'category' => 'required|string',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
         if (is_string($request->facilities)) {
@@ -107,35 +83,18 @@ class RoomController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $response = Http::asMultipart()->post(
-                    'https://api.cloudinary.com/v1_1/' .
-                        config('cloudinary.cloud_name') .
-                        '/image/upload',
+                $upload = Cloudinary::upload(
+                    $request->file('image')->getRealPath(),
                     [
-                        [
-                            'name' => 'file',
-                            'contents' => fopen($request->file('image')->getRealPath(), 'r'),
-                        ],
-                        [
-                            'name' => 'upload_preset',
-                            'contents' => config('cloudinary.upload_preset'),
-                        ],
-                        [
-                            'name' => 'folder',
-                            'contents' => 'rooms',
-                        ],
+                        'upload_preset' => 'rooms_unsigned'
                     ]
                 );
 
-                if (!$response->successful()) {
-                    throw new \Exception($response->body());
-                }
-
-                $validated['image'] = $response->json()['secure_url'];
-            } catch (\Throwable $e) {
+                $validated['image'] = $upload->getSecurePath();
+            } catch (\Exception $e) {
                 return response()->json([
                     'message' => 'Upload gambar gagal',
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage()
                 ], 500);
             }
         }
