@@ -10,27 +10,30 @@ class Room extends Model
     use HasFactory;
 
     protected $fillable = [
-    'name',
-    'location',
-    'capacity',
-    'facilities',
-    'description',
-    'is_active',
-    'category',
-    'image',
-];
+        'name',
+        'location',
+        'capacity',
+        'facilities',
+        'description',
+        'is_active',
+        'category',
+        'image',
+    ];
 
-protected $casts = [
-    'facilities' => 'array',
-    'is_active' => 'boolean',
-];
+    protected $casts = [
+        'facilities' => 'array',
+        'is_active' => 'boolean',
+    ];
 
+    // ⬇️ ini penting
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()
     {
-        return $this->image
-            ? asset('storage/' . $this->image)
-            : null;
+        if (!$this->image) {
+            return null;
+        }
+
+        return asset('storage/' . $this->image);
     }
 }
