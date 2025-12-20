@@ -25,15 +25,17 @@ class Room extends Model
         'is_active' => 'boolean',
     ];
 
-    // ⬇️ ini penting
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()
     {
-        if (!$this->image) {
-            return null;
-        }
+        if (!$this->image) return null;
 
-        return asset('storage/' . $this->image);
+        // 🔥 PAKSA HTTPS
+        return str_replace(
+            'http://',
+            'https://',
+            asset('storage/' . $this->image)
+        );
     }
 }
