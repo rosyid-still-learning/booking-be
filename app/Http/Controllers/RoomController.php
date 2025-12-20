@@ -9,7 +9,7 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 class RoomController extends Controller
 {
     /**
-     * Tampilkan daftar semua ruangan.
+     * GET /rooms & /admin/rooms
      */
     public function index()
     {
@@ -19,31 +19,31 @@ class RoomController extends Controller
     }
 
     /**
-     * Test Cloudinary config
+     * TEST CLOUDINARY
      */
     public function testCloudinary()
     {
         return response()->json([
-            'cloud' => config('cloudinary.cloud_name'),
-            'key' => config('cloudinary.api_key'),
+            'cloud'  => config('cloudinary.cloud_name'),
+            'key'    => config('cloudinary.api_key'),
             'secret' => config('cloudinary.api_secret') ? 'ADA' : 'KOSONG',
         ]);
     }
 
     /**
-     * Simpan ruangan baru.
+     * POST /admin/rooms
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
-            'location' => 'required|string',
-            'capacity' => 'required|integer',
-            'facilities' => 'required',
+            'name'        => 'required|string',
+            'location'    => 'required|string',
+            'capacity'    => 'required|integer',
+            'facilities'  => 'required',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'category' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'is_active'   => 'boolean',
+            'category'    => 'nullable|string',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         // facilities → array
@@ -54,32 +54,33 @@ class RoomController extends Controller
             );
         }
 
-        // 🔥 UPLOAD IMAGE KE CLOUDINARY
-       // 🔥 UPLOAD IMAGE KE CLOUDINARY (VERSI STABIL)
-if ($request->hasFile('image')) {
-    try {
-        $uploaded = Cloudinary::upload(
-            $request->file('image')->getRealPath(),
-            [
-                'folder' => 'rooms',
-            ]
-        );
+        // 🔥 UPLOAD IMAGE KE CLOUDINARY (AMAN)
+        if ($request->hasFile('image')) {
+            try {
+                $upload = Cloudinary::upload(
+                    $request->file('image')->getRealPath(),
+                    ['folder' => 'rooms']
+                );
 
-        // PASTIKAN AMBIL SECURE URL
-        $validated['image'] = $uploaded->getSecurePath();
-    } catch (\Throwable $e) {
+                $validated['image'] = $upload->getSecurePath();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Upload gambar gagal',
+                    'error'   => $e->getMessage()
+                ], 500);
+            }
+        }
+
+        $room = Room::create($validated);
+
         return response()->json([
-            'error' => 'Cloudinary upload failed',
-            'message' => $e->getMessage(),
-        ], 500);
-    }
-}
-
-
+            'message' => 'Ruangan berhasil ditambahkan',
+            'data'    => $room
+        ], 201);
     }
 
     /**
-     * Detail ruangan
+     * GET /rooms/{room}
      */
     public function show(Room $room)
     {
@@ -87,19 +88,19 @@ if ($request->hasFile('image')) {
     }
 
     /**
-     * Update ruangan
+     * PUT /admin/rooms/{room}
      */
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
-            'location' => 'required|string',
-            'capacity' => 'required|integer',
-            'facilities' => 'required',
-            'category' => 'required|string',
+            'name'        => 'required|string',
+            'location'    => 'required|string',
+            'capacity'    => 'required|integer',
+            'facilities'  => 'required',
+            'category'    => 'required|string',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            'is_active'   => 'boolean',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         if (is_string($request->facilities)) {
@@ -109,29 +110,33 @@ if ($request->hasFile('image')) {
             );
         }
 
-        // 🔥 UPLOAD IMAGE BARU KE CLOUDINARY
-       if ($request->hasFile('image')) {
-    try {
-        $uploaded = Cloudinary::upload(
-            $request->file('image')->getRealPath(),
-            [
-                'folder' => 'rooms',
-            ]
-        );
+        // 🔥 UPLOAD IMAGE BARU (AMAN + TIDAK 500)
+        if ($request->hasFile('image')) {
+            try {
+                $upload = Cloudinary::upload(
+                    $request->file('image')->getRealPath(),
+                    ['folder' => 'rooms']
+                );
 
-        $validated['image'] = $uploaded->getSecurePath();
-    } catch (\Throwable $e) {
+                $validated['image'] = $upload->getSecurePath();
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Upload gambar gagal',
+                    'error'   => $e->getMessage()
+                ], 500);
+            }
+        }
+
+        $room->update($validated);
+
         return response()->json([
-            'error' => 'Cloudinary upload failed',
-            'message' => $e->getMessage(),
-        ], 500);
-    }
-}
-
+            'message' => 'Ruangan berhasil diperbarui',
+            'data'    => $room
+        ]);
     }
 
     /**
-     * Hapus ruangan
+     * DELETE /admin/rooms/{room}
      */
     public function destroy(Request $request, Room $room)
     {
@@ -139,7 +144,6 @@ if ($request->hasFile('image')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // ❌ TIDAK PERLU DELETE FILE (CLOUDINARY AMAN)
         $room->delete();
 
         return response()->json(['message' => 'Room deleted']);

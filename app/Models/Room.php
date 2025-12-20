@@ -29,7 +29,6 @@ class Room extends Model
 
     public function getImageUrlAttribute()
     {
-        // image SUDAH URL CLOUDINARY
-        return $this->image;
+        return $this->image; // SUDAH URL CLOUDINARY
     }
 }
