@@ -19,13 +19,11 @@ class Booking extends Model
 
     protected $appends = ['attachment_url'];
 
-public function getAttachmentUrlAttribute()
-{
-    return $this->attachment
-        ? asset('storage/' . $this->attachment)
-        : null;
-}
-
+    public function getAttachmentUrlAttribute()
+    {
+        // attachment SUDAH URL CLOUDINARY
+        return $this->attachment;
+    }
 
     public function room()
     {
