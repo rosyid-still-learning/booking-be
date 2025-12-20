@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
@@ -54,9 +54,14 @@ class RoomController extends Controller
             );
         }
 
-        // upload image
+        // 🔥 UPLOAD IMAGE KE CLOUDINARY
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('rooms', 'public');
+            $upload = Cloudinary::upload(
+                $request->file('image')->getRealPath(),
+                ['folder' => 'rooms']
+            );
+
+            $validated['image'] = $upload->getSecurePath(); // URL HTTPS
         }
 
         $room = Room::create($validated);
@@ -91,7 +96,6 @@ class RoomController extends Controller
             'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
 
-        // facilities → array
         if (is_string($request->facilities)) {
             $validated['facilities'] = array_map(
                 'trim',
@@ -99,13 +103,14 @@ class RoomController extends Controller
             );
         }
 
-        // jika upload image baru
+        // 🔥 UPLOAD IMAGE BARU KE CLOUDINARY
         if ($request->hasFile('image')) {
-            if ($room->image && Storage::disk('public')->exists($room->image)) {
-                Storage::disk('public')->delete($room->image);
-            }
+            $upload = Cloudinary::upload(
+                $request->file('image')->getRealPath(),
+                ['folder' => 'rooms']
+            );
 
-            $validated['image'] = $request->file('image')->store('rooms', 'public');
+            $validated['image'] = $upload->getSecurePath();
         }
 
         $room->update($validated);
@@ -125,10 +130,7 @@ class RoomController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if ($room->image && Storage::disk('public')->exists($room->image)) {
-            Storage::disk('public')->delete($room->image);
-        }
-
+        // ❌ TIDAK PERLU DELETE FILE (CLOUDINARY AMAN)
         $room->delete();
 
         return response()->json(['message' => 'Room deleted']);
