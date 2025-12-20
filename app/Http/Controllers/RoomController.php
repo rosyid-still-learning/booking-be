@@ -56,20 +56,21 @@ class RoomController extends Controller
 
         // 🔥 UPLOAD IMAGE KE CLOUDINARY
         if ($request->hasFile('image')) {
-            $upload = Cloudinary::upload(
-                $request->file('image')->getRealPath(),
-                ['folder' => 'rooms']
-            );
+    try {
+        $upload = Cloudinary::upload(
+            $request->file('image')->getRealPath(),
+            ['folder' => 'rooms']
+        );
 
-            $validated['image'] = $upload->getSecurePath(); // URL HTTPS
-        }
-
-        $room = Room::create($validated);
-
+        $validated['image'] = $upload->getSecurePath();
+    } catch (\Exception $e) {
         return response()->json([
-            'message' => 'Ruangan berhasil ditambahkan',
-            'data' => $room
-        ], 201);
+            'error' => 'Cloudinary upload failed',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+}
+
     }
 
     /**
