@@ -8,6 +8,7 @@ return [
 
     'allowed_origins' => [
         'https://booking-fe-silk.vercel.app',
+        'https://rosyidcloud.my.id',
     ],
 
     'allowed_origins_patterns' => [],
