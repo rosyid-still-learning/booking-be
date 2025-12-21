@@ -10,6 +10,7 @@ return [
         'https://booking-fe-silk.vercel.app',
         'https://rosyidcloud.my.id',
         'https://www.rosyidcloud.my.id',
+        'https://ganesha-booking.rosyidcloud.my.id',
     ],
 
     'allowed_origins_patterns' => [],
