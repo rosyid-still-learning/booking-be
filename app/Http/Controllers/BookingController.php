@@ -94,7 +94,7 @@ if ($request->hasFile('attachment')) {
             $file->getRealPath(),
             [
                 'folder' => 'attachments',
-                'resource_type' => 'image', // 🔥 PENTING: JANGAN RAW
+                'resource_type' => 'auto', // 🔥 PENTING: JANGAN RAW
                 'use_filename' => true,     // pakai nama asli
                 'unique_filename' => false // jangan diacak
             ]
