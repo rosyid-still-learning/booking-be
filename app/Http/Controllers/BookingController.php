@@ -80,7 +80,7 @@ $fileUrl = null;
 
 if ($request->hasFile('attachment')) {
     try {
-        $cloudinary = new Cloudinary([
+        $cloudinary = new \Cloudinary\Cloudinary([
             'cloud' => [
                 'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
                 'api_key'    => env('CLOUDINARY_API_KEY'),
@@ -89,27 +89,18 @@ if ($request->hasFile('attachment')) {
         ]);
 
         $file = $request->file('attachment');
-$extension = strtolower($file->getClientOriginalExtension());
 
-$options = [
-    'folder' => 'attachments',
-];
+        $result = $cloudinary->uploadApi()->upload(
+            $file->getRealPath(),
+            [
+                'folder' => 'attachments',
+                'resource_type' => 'image', // 🔥 PENTING: JANGAN RAW
+                'use_filename' => true,     // pakai nama asli
+                'unique_filename' => false // jangan diacak
+            ]
+        );
 
-if ($extension === 'pdf') {
-    $options['resource_type'] = 'raw';
-    $options['access_mode'] = 'public'; // 🔥 INI YANG PENTING
-} else {
-    $options['resource_type'] = 'image';
-}
-
-$result = $cloudinary->uploadApi()->upload(
-    $file->getRealPath(),
-    $options
-);
-
-$fileUrl = $result['secure_url'];
-
-
+        $fileUrl = $result['secure_url'];
 
     } catch (\Throwable $e) {
         \Log::error('Cloudinary upload error', [
