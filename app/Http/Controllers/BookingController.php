@@ -88,15 +88,28 @@ if ($request->hasFile('attachment')) {
             ],
         ]);
 
-        $result = $cloudinary->uploadApi()->upload(
-            $request->file('attachment')->getRealPath(),
-            [
-                'folder' => 'attachments',
-                'resource_type' => 'auto',
-            ]
-        );
+        $file = $request->file('attachment');
+$extension = strtolower($file->getClientOriginalExtension());
 
-        $fileUrl = $result['secure_url'];
+$options = [
+    'folder' => 'attachments',
+];
+
+if ($extension === 'pdf') {
+    $options['resource_type'] = 'raw';
+    $options['access_mode'] = 'public'; // 🔥 INI YANG PENTING
+} else {
+    $options['resource_type'] = 'image';
+}
+
+$result = $cloudinary->uploadApi()->upload(
+    $file->getRealPath(),
+    $options
+);
+
+$fileUrl = $result['secure_url'];
+
+
 
     } catch (\Throwable $e) {
         \Log::error('Cloudinary upload error', [
